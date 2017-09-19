@@ -1,0 +1,20 @@
+- check degrees RT(0), RT(1), .., RT(5) and convergence rates
+- check 3d (new reference solution, ethier/steinmann?)
+- distort_random() 2d and 3d?
+- check if adaptivity works
+- linear solvers? AMG? GMG?
+- switch to BDM, implement project_boundary_values_div_conforming(),
+then check all the things above
+- problem on curved geometry (test problem from Timo,
+http://www.math.clemson.edu/~heister/manual.pdf section 5.4.8/9)
+
+
+tutorial:
+- what spaces? DG vs RT|BDM?
+- show pressure-robustness of hdiv method
+- what is "new"? hdiv with stokes, new fancy DG assembly
+- use mesh_loop? yes
+- test problem: hollow sphere?
+
+- adaptivity? no
+- parallel? solvers? no
