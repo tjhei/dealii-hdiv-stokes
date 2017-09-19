@@ -18,3 +18,5 @@ tutorial:
 
 - adaptivity? no
 - parallel? solvers? no
+
+This is a simple test to check if Philipp can do stuff in GitHub!
