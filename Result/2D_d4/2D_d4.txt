@@ -1,0 +1,39 @@
+  Now running with FESystem<2>[FESystem<2>[FE_RaviartThomas<2>(4)]-FE_DGQ<2>(4)]
+  Degree: 4
+      *       
+ At 1th mesh
+ DoFs: 85
+ L2 error:  0.228434 L2_Conv_rate:      0
+ H1 error:  3.72469 H1_Conv_rate:      0
+ Hdiv error1:  6.2843e-15 Hdiv_Conv_rate1:      0
+         *          
+ At 2th mesh
+ DoFs: 320
+ L2 error:  0.0011531 L2_Conv_rate: 198.104
+ H1 error:  0.0539199 H1_Conv_rate: 69.0782
+ Hdiv error1:  1.10575e-09 Hdiv_Conv_rate1: 5.68331e-06
+         *          
+ At 3th mesh
+ DoFs: 1240
+ L2 error:  0.000251422 L2_Conv_rate: 4.58632
+ H1 error:  0.0149194 H1_Conv_rate: 3.61408
+ Hdiv error1:  3.44674e-09 Hdiv_Conv_rate1: 0.320809
+         *          
+ At 4th mesh
+ DoFs: 4880
+ L2 error:  7.45005e-06 L2_Conv_rate: 33.7476
+ H1 error:  0.000950286 H1_Conv_rate: 15.6999
+ Hdiv error1:  6.71006e-10 Hdiv_Conv_rate1: 5.13667
+         *          
+ At 5th mesh
+ DoFs: 19360
+ L2 error:  2.28929e-07 L2_Conv_rate: 32.543
+ H1 error:  5.95925e-05 H1_Conv_rate: 15.9464
+ Hdiv error1:  1.62408e-08 Hdiv_Conv_rate1: 0.041316
+         *          
+ At 6th mesh
+ DoFs: 77120
+ L2 error:  7.123e-09 L2_Conv_rate: 32.1395
+ H1 error:  3.72728e-06 H1_Conv_rate: 15.9882
+ Hdiv error1:  3.87569e-09 Hdiv_Conv_rate1: 4.19044
+         *          
