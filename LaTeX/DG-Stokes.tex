@@ -206,13 +206,57 @@ Bilinear forms:
 \end{align*}	
 
 %------------------------------------------------------------------------------------------------
-%\subsection{2D test cases}	
+\subsection{2D test case}	
 %------------------------------------------------------------------------------------------------
 
+Choose $\Omega=\rb{0,1}^2$ and the exact solution to be 
+\begin{align*}
+	\uu = \begin{pmatrix}
+		\pi \sin^2(\pi x) \sin(2 \pi y) \\
+		-\pi \sin(2 \pi x) \sin^2(\pi y) 
+	\end{pmatrix},
+	\quad
+	p = \cos(\pi x) \sin(\pi y).
+\end{align*}
+
+The corresponding data is 
+\begin{align*}
+	\ff = \begin{pmatrix}
+		-\nu 2\pi^3 (2\cos(2\pi x)-1)\sin(2\pi y) -\pi\sin(\pi x)\sin(\pi y) \\
+		\nu 2\pi^3\sin(2\pi x)(2\cos(2\pi y)-1) +\pi\cos(\pi x)\cos(\pi y)
+	\end{pmatrix},
+	\quad
+	\gbld_\Drm = \zero. 
+\end{align*}
+
 %------------------------------------------------------------------------------------------------
-%\subsection{3D test cases}	
+\subsection{3D test case}	
 %------------------------------------------------------------------------------------------------
 
+Choose $\Omega=\rb{0,1}^3$ and the exact solution to be 
+\begin{align*}
+	\uu = \begin{pmatrix}
+		\pi \sin^2(\pi x) \sin(2 \pi y) \sin(2\pi z) \\
+		-\pi \sin(2 \pi x) \sin^2(\pi y) \sin(2\pi z) \\
+		\sin(2 \pi x) \sin(2 \pi y) \sin^2(\pi z)
+	\end{pmatrix},
+	\quad
+	p = \cos(\pi x) \sin(\pi y) \cos(\pi z).
+\end{align*}
+
+The corresponding data is 
+\begin{align*}
+	\ff = \begin{pmatrix}
+		-\nu 2\pi^3 (3\cos(2\pi x)-2)\sin(2\pi y)\sin(2\pi z) -\pi\sin(\pi x)\sin(\pi y) \cos(\pi z) \\
+		\nu 2\pi^3\sin(2\pi x)(3\cos(2\pi y)-2)\sin(2\pi z) +\pi\cos(\pi x)\cos(\pi y) \cos(\pi z) \\
+		\nu 2\pi^2\sin(2\pi y)\sin(2\pi y)(3\cos(2\pi z)-2) -\pi\cos(\pi x)\sin(\pi y)\sin(\pi z)
+	\end{pmatrix},
+	\quad
+	\gbld_\Drm = \zero. 
+\end{align*}
+
+
+\newpage
 %------------------------------------------------------------------------------------------------
 %------------------------------------------------------------------------------------------------
 \section{Full DG method}	
