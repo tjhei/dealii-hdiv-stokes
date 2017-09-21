@@ -151,15 +151,20 @@ namespace Step59
 //    Functions::StokesLSingularity s;
 //    return s.value(p, component);
 
-    // manufac
+    // nonzero on BD's
+//      if (component == 0)
+//          return sin (PI * x);
+//      if (component == 1)
+//          return - PI * y * cos(PI * x);
+//      if (component == 2)
+//          return sin (PI * x) * cos (PI * y);
+
+    // zero on BD's
     if (component == 0)
-//      return sin (PI * x);
     	return PI*sin(PI*x)*sin(PI*x)*sin(2.0*PI*y);
     if (component == 1)
-//      return - PI * y * cos(PI * x);
     	return -PI*sin(PI*y)*sin(PI*y)*sin(2.0*PI*x);
     if (component == 2)
-//      return sin (PI * x) * cos (PI * y);
     	return 0.0;
 
     return 0;
@@ -178,11 +183,11 @@ namespace Step59
     const double z = p(2);
 
     if (component == 0)
-      return 2.0 * sin (PI * x);
+      return 2.*PI*sin(PI*x)*sin(PI*x)*sin(2.0*PI*y)*sin(2.0*PI*z);
     if (component == 1)
-      return - PI * y * cos(PI * x);
+      return   -PI*sin(PI*y)*sin(PI*y)*sin(2.0*PI*x)*sin(2.0*PI*z);
     if (component == 2)
-      return - PI * z * cos(PI * x);
+      return   -PI*sin(PI*z)*sin(PI*z)*sin(2.0*PI*x)*sin(2.0*PI*y);
     if (component == 3)
       return sin (PI * x) * cos (PI * y) * sin (PI * z);
 
@@ -253,21 +258,21 @@ namespace Step59
     Tensor<1,3> return_value;
     if (component == 0)
       {
-        return_value[0] = 2 * PI * cos (PI * x);
-        return_value[1] = 0.0;
-        return_value[2] = 0.0;
+        return_value[0] = 2*PI*PI*sin(2*PI*x)*sin(2*PI*y)*sin(2*PI*z);
+        return_value[1] = 4*PI*PI*sin(PI*x)*sin(PI*x)*cos(2*PI*y)*sin(2*PI*z);
+        return_value[2] = 4*PI*PI*sin(PI*x)*sin(PI*x)*cos(2*PI*z)*sin(2*PI*y);
       }
     else if (component == 1)
       {
-        return_value[0] = y * PI * PI * sin( PI * x);
-        return_value[1] = - PI * cos (PI * x);
-        return_value[2] = 0.0;
+        return_value[0] = -2*PI*PI*sin(PI*y)*sin(PI*y)*cos(2*PI*x)*sin(2*PI*z);
+        return_value[1] = -PI*PI*sin(2*PI*x)*sin(2*PI*y)*sin(2*PI*z);
+        return_value[2] = -2*PI*PI*sin(PI*y)*sin(PI*y)*cos(2*PI*z)*sin(2*PI*x);
       }
     else if (component == 2)
       {
-        return_value[0] = z * PI * PI * sin( PI * x);
-        return_value[1] = 0.0;
-        return_value[2] = - PI * cos (PI * x);
+        return_value[0] = -2*PI*PI*sin(PI*z)*sin(PI*z)*cos(2*PI*x)*sin(2*PI*y);
+        return_value[1] = -2*PI*PI*sin(PI*z)*sin(PI*z)*cos(2*PI*y)*sin(2*PI*x);
+        return_value[2] = -PI*PI*sin(2*PI*x)*sin(2*PI*y)*sin(2*PI*z);
       }
     else if (component == 3)
       {
@@ -302,14 +307,24 @@ namespace Step59
     double y = p(1);
     double nu = 1.0;
 
+    // RHS for 0 BD's
     if (component == 0)
 //      return PI * PI * sin(PI * x) + PI * cos(PI * x) * cos(PI * y);
-    	return -nu*2.0*PI*PI*PI*(2.0*cos(2.0*PI*x)-1)*sin(2.0*PI*y)-PI*sin(PI*x)*sin(PI*y);
+//    	return -nu*2.0*PI*PI*PI*(2.0*cos(2.0*PI*x)-1)*sin(2.0*PI*y)-PI*sin(PI*x)*sin(PI*y);
+    	return -nu*2.0*PI*PI*PI*(-2.0*sin(PI*x)*sin(PI*x)+cos(2.*PI*x))*sin(2.0*PI*y)-PI*sin(PI*x)*sin(PI*y);
     if (component == 1)
 //      return - PI * PI * PI * y * cos(PI * x) - PI * sin(PI * y) * sin(PI * x);
     	return nu*2.0*PI*PI*PI*(2.0*cos(2.0*PI*y)-1)*sin(2.0*PI*x)+PI*cos(PI*x)*cos(PI*y);
     if (component == 2)
     	return 0.0;
+
+    // RHS for non-0 BD's
+//    if (component == 0)
+//      return PI * PI * sin(PI * x) + PI * cos(PI * x) * cos(PI * y);
+//    if (component == 1)
+//      return - PI * PI * PI * y * cos(PI * x) - PI * sin(PI * y) * sin(PI * x);
+//    if (component == 2)
+//      return 0;
 
     return 0;
   }
@@ -325,14 +340,27 @@ namespace Step59
     double x = p(0);
     double y = p(1);
     double z = p(2);
-    if (component == 0)
-      return 2 * PI * PI * sin(PI * x) + PI * cos(PI * x) * cos(PI * y) * sin(PI * z);
-    if (component == 1)
-      return  - PI * PI * PI * y * cos (PI * x) + PI * (-1) * sin(PI * y)*sin(PI * x)*sin(PI * z);
-    if (component == 2)
-      return - PI * PI * PI * z * cos (PI * x) + PI * cos(PI * z)*sin(PI * x)*cos(PI * y);
+
+//    if (component == 0)
+//      return 2 * PI * PI * sin(PI * x) + PI * cos(PI * x) * cos(PI * y) * sin(PI * z);
+//    if (component == 1)
+//      return  - PI * PI * PI * y * cos (PI * x) + PI * (-1) * sin(PI * y)*sin(PI * x)*sin(PI * z);
+//    if (component == 2)
+//      return - PI * PI * PI * z * cos (PI * x) + PI * cos(PI * z)*sin(PI * x)*cos(PI * y);
+//    if (component == 3)
+//      return 0;
+    if(component == 0)
+    	return 4.*PI*PI*PI*(4.*sin(PI*x)*sin(PI*x)-cos(2.*PI*x))*sin(2.*PI*y)*sin(2.*PI*z)
+    			+ PI * cos(PI * x) * cos(PI * y) * sin(PI * z);
+    if(component == 1)
+    	return -2.*PI*PI*PI*(4.*sin(PI*y)*sin(PI*y)-cos(2.*PI*y))*sin(2.*PI*x)*sin(2.*PI*z)
+    			+ PI * (-1) * sin(PI * y)*sin(PI * x)*sin(PI * z);
+    if(component == 2)
+    	return -2.*PI*PI*PI*(4.*sin(PI*z)*sin(PI*z)-cos(2.*PI*z))*sin(2.*PI*x)*sin(2.*PI*y)
+    			+ PI * cos(PI * z)*sin(PI * x)*cos(PI * y);
     if (component == 3)
-      return 0;
+        return 0;
+
 
     return 0;
   }
@@ -451,6 +479,7 @@ namespace Step59
       						   (2. * fe.shape_value_component(i,k,d) * penalty * fe.shape_value_component(j,k,d)
       				           - (n * fe.shape_grad_component(i,k,d)) * fe.shape_value_component(j,k,d)
       				           - (n * fe.shape_grad_component(j,k,d)) * fe.shape_value_component(i,k,d))*fe.JxW(k);
+
       		/*  b(p, v)_bd = {p}[v]n = p_j*u_i*n */
       				dinfo.matrix(0,false).matrix(i,j) +=
       						    fe.shape_value_component(j,k,p_components)*(fe.shape_value_component(i,k,d)*n[d])*fe.JxW(k);
@@ -581,22 +610,28 @@ namespace Step59
       }
 
       template <int dim>
-      void RHSIntegrator<dim>::boundary(MeshWorker::DoFInfo<dim> &, typename MeshWorker::IntegrationInfo<dim> &) const
+      void RHSIntegrator<dim>::boundary(MeshWorker::DoFInfo<dim> &dinfo, typename MeshWorker::IntegrationInfo<dim> &info) const
       {
-    //    const FEValuesBase<dim> &fe = info.fe_values();
-    //    Vector<double> &local_vector = dinfo.vector(0).block(0);
-    //
-    //    std::vector<double> boundary_values(fe.n_quadrature_points);
-    //    exact_solution.value_list(fe.get_quadrature_points(), boundary_values);
-    //
-    //    const unsigned int deg = fe.get_fe().tensor_degree();
-    //    const double penalty = 2. * deg * (deg+1) * dinfo.face->measure() / dinfo.cell->measure();
-    //
-    //    for (unsigned k=0; k<fe.n_quadrature_points; ++k)
-    //      for (unsigned int i=0; i<fe.dofs_per_cell; ++i)
-    //        local_vector(i) += (- fe.shape_value(i,k) * penalty * boundary_values[k]
-    //                            + (fe.normal_vector(k) * fe.shape_grad(i,k)) * boundary_values[k])
-    //                           * fe.JxW(k);
+    	  return;
+        const FEValuesBase<dim> &fe = info.fe_values();
+        const unsigned int      n_components  = fe.get_fe().n_components();
+        const unsigned int      v_components  = n_components-1;
+        const unsigned int      p_components  = n_components-1;
+
+        std::vector<Vector<double>> boundary_values(fe.n_quadrature_points);
+        Solution<dim> exact_solution;
+        exact_solution.value_list(fe.get_quadrature_points(), boundary_values);
+
+        const unsigned int deg = fe.get_fe().tensor_degree();
+
+        const double penalty = 2. * deg * (deg+1) * dinfo.face->measure() / dinfo.cell->measure();
+
+        for (unsigned k=0; k<fe.n_quadrature_points; ++k)
+          for (unsigned int i=0; i<fe.dofs_per_cell; ++i)
+        	  for (unsigned int d = 0; d<v_components; ++d)
+        		  info.vector(0).block(0)(i) += ( fe.shape_value_component(i,k,d) * penalty * boundary_values[k][d]
+												 -(fe.normal_vector(k) * fe.shape_grad_component(i,k,d)) * boundary_values[k][d])
+												 * fe.JxW(k);
       }
 
 
@@ -753,7 +788,7 @@ namespace Step59
 
      const FEValuesBase<dim> &fe           = info.fe_values();
      const unsigned int      n_q_points    = fe.n_quadrature_points;
-     const unsigned int      dofs_per_cell = fe.dofs_per_cell;
+//     const unsigned int      dofs_per_cell = fe.dofs_per_cell;
 
      //  Check problem type
     const RightHandSide<dim>          right_hand_side;
@@ -813,7 +848,7 @@ namespace Step59
    // namely the norm of the difference between the finite element solution and
    // the correct boundary condition.
    template <int dim>
-   void Estimator<dim>::boundary(MeshWorker::DoFInfo<dim> &dinfo, typename MeshWorker::IntegrationInfo<dim> &info) const
+   void Estimator<dim>::boundary(MeshWorker::DoFInfo<dim> &, typename MeshWorker::IntegrationInfo<dim> &) const
    {
   //   const FEValuesBase<dim> &fe = info.fe_vaues();
 
@@ -829,7 +864,8 @@ namespace Step59
   //   for (unsigned k=0; k<fe.n_quadrature_points; ++k)
   //     dinfo.value(0) += penalty * (boundary_values[k] - uh[k]) * (boundary_values[k] - uh[k])
   //                       * fe.JxW(k);
-     dinfo.value(0) = 0.0;//*std::sqrt(dinfo.value(0));
+//     dinfo.value(0) = 0.0;
+     //*std::sqrt(dinfo.value(0));
    }
 
 
@@ -944,8 +980,8 @@ namespace Step59
 
      template <int dim>
      void ErrorIntegrator<dim>::face(
-       MeshWorker::DoFInfo<dim> &dinfo1,
-       MeshWorker::DoFInfo<dim> &dinfo2,
+       MeshWorker::DoFInfo<dim> &,
+       MeshWorker::DoFInfo<dim> &,
        typename MeshWorker::IntegrationInfo<dim> &,
        typename MeshWorker::IntegrationInfo<dim> &) const
      {
@@ -1037,10 +1073,10 @@ namespace Step59
 //    triangulation (Triangulation<dim>::limit_level_difference_at_vertices),
     triangulation (Triangulation<dim>::maximum_smoothing),
     // Finite element for the velocity only:
-    velocity_fe (FE_RaviartThomas<dim>(pressure_degree+1), dim-1),
+    velocity_fe (FE_RaviartThomas<dim>(pressure_degree), 1),
 //    velocity_fe (FE_RaviartThomas<dim>(pressure_degree+1), dim-1),
     // Finite element for the whole system:
-    fe (velocity_fe, 1, FE_DGQ<dim> (pressure_degree+1), 1),
+    fe (velocity_fe, 1, FE_DGQ<dim> (pressure_degree), 1),
     dof_handler (triangulation),
     velocity_dof_handler (triangulation),
     computing_timer (std::cout, TimerOutput::never,
@@ -1090,9 +1126,9 @@ namespace Step59
 
     std::vector<types::global_dof_index> dofs_per_block (2);
     DoFTools::count_dofs_per_block (dof_handler, dofs_per_block, block_component);
-    const unsigned int n_u = dofs_per_block[0],
-                       n_p = dofs_per_block[1];
-
+//    const unsigned int n_u = dofs_per_block[0],
+//                       n_p = dofs_per_block[1];
+//
 //    std::cout << "\tNumber of active cells: "
 //              << triangulation.n_active_cells()
 //              << std::endl
@@ -1376,14 +1412,12 @@ namespace Step59
     // Here we must make sure to solve for the residual with "good enough" accuracy
     SolverControl solver_control (system_matrix.m(),
                                   1e-12*system_rhs.l2_norm());
-    unsigned int n_iterations_A;
-    unsigned int n_iterations_S;
 
     // This is used to pass whether or not we want to solve for A inside
     // the preconditioner.  One could change this to false to see if
     // there is still convergence and if so does the program then run
     // faster or slower
-    const bool use_expensive = false;
+    const bool use_expensive = true;
 
     SolverFGMRES<BlockVector<double> > solver (solver_control);
 
@@ -1392,16 +1426,16 @@ namespace Step59
 
 //        std::cout << "   Computing preconditioner..." << std::endl << std::flush;
 
-        SparseDirectUMFPACK  A_preconditioner;
-        A_preconditioner.initialize(system_matrix.block(0,0));
+//        SparseDirectUMFPACK  A_preconditioner;
+//        A_preconditioner.initialize(system_matrix.block(0,0));
 
-//        SparseILU<double> A_preconditioner;
-//        A_preconditioner.initialize (system_matrix.block(0,0));
+        SparseILU<double> A_preconditioner;
+        A_preconditioner.initialize (system_matrix.block(0,0));
 
         SparseILU<double> S_preconditioner;
         S_preconditioner.initialize (pressure_mass_matrix);
 
-        const BlockSchurPreconditioner<SparseDirectUMFPACK, SparseILU<double> >
+        const BlockSchurPreconditioner<SparseILU<double>, SparseILU<double> >
         preconditioner (system_matrix,
                         pressure_mass_matrix,
                         A_preconditioner,
@@ -1419,13 +1453,13 @@ namespace Step59
                         solution,
                         system_rhs,
                         preconditioner);
-
-          n_iterations_A = preconditioner.n_iterations_A;
-          n_iterations_S = preconditioner.n_iterations_S;
         }
 
     constraints.distribute (solution);
 
+
+//          unsigned int n_iterations_A = preconditioner.n_iterations_A;
+//          unsigned int n_iterations_S = preconditioner.n_iterations_S;
 //    std::cout << std::endl
 //              << "\tNumber of FGMRES iterations: "
 //              << solver_control.last_step() << std::endl
@@ -1455,9 +1489,11 @@ namespace Step59
                                        VectorTools::L2_norm,
                                        &velocity_mask);
 
-    const double Velocity_L2_error = VectorTools::compute_global_error(triangulation,
-  		  	  	  	  	  	  	  	  	  	  	  	  	  	difference_per_cell,
-                                                              VectorTools::L2_norm);
+//    const double Velocity_L2_error = VectorTools::compute_global_error(triangulation,
+//  		  	  	  	  	  	  	  	  	  	  	  	  	  	difference_per_cell,
+//                                                              VectorTools::L2_norm);
+
+    const double Velocity_L2_error = difference_per_cell.l2_norm();
 
     global_l2_diff = difference_per_cell;
 
@@ -1470,9 +1506,11 @@ namespace Step59
                                        VectorTools::H1_norm,
                                        &velocity_mask);
 
-    const double Velocity_H1_error = VectorTools::compute_global_error(triangulation,
-  		  	  	  	  	  	  	  	  	  	  	  	  	  	difference_per_cell,
-                                                              VectorTools::H1_norm);
+//    const double Velocity_H1_error = VectorTools::compute_global_error(triangulation,
+//  		  	  	  	  	  	  	  	  	  	  	  	  	  	difference_per_cell,
+//                                                              VectorTools::H1_norm);
+
+    const double Velocity_H1_error = difference_per_cell.l2_norm();
 
     global_h1_diff = difference_per_cell;
 
@@ -1484,9 +1522,11 @@ namespace Step59
                                        VectorTools::Hdiv_seminorm,
                                        &velocity_mask);
 
-    const double Velocity_Hdiv_error1 = VectorTools::compute_global_error(triangulation,
-  		  	  	  	  	  	  	  	  	  	  	  	  	  	difference_per_cell,
-                                                              VectorTools::Hdiv_seminorm);
+//    const double Velocity_Hdiv_error1 = VectorTools::compute_global_error(triangulation,
+//  		  	  	  	  	  	  	  	  	  	  	  	  	  	difference_per_cell,
+//                                                              VectorTools::Hdiv_seminorm);
+
+    const double Velocity_Hdiv_error1 = difference_per_cell.l2_norm();
 
     global_div_diff = difference_per_cell;
 
@@ -1524,7 +1564,7 @@ namespace Step59
    	      integrator, assembler);
    	    triangulation.load_user_indices(old_user_indices);
      	cell_div_diff = errors.block(0);
-   	    double Velocity_Hdiv_error2 = errors.block(0).l2_norm();
+//   	    double Velocity_Hdiv_error2 = errors.block(0).l2_norm();
 
 	std::cout   << " At " << k+1 << "th mesh" << std::endl
 	            << " DoFs: " << dof_handler.n_dofs() << std::endl
@@ -1534,13 +1574,13 @@ namespace Step59
 				<< " H1_Conv_rate: " << std::setw(6)<< (k==0? 0:last_H1_error/Velocity_H1_error) << std::endl
 				<< " Hdiv error1:  " << std::setw(6) << Velocity_Hdiv_error1 << std::setw(0)
 				<< " Hdiv_Conv_rate1: " << std::setw(6)<< (k==0? 0:last_Hdiv_error1/Velocity_Hdiv_error1) << std::endl
-				<< " Hdiv error2:  " << std::setw(6) << Velocity_Hdiv_error2 << std::setw(0)
-				<< " Hdiv_Conv_rate2: " << std::setw(6)<< (k==0? 0:last_Hdiv_error2/Velocity_Hdiv_error2) << std::endl
+//				<< " Hdiv error2:  " << std::setw(6) << Velocity_Hdiv_error2 << std::setw(0)
+//				<< " Hdiv_Conv_rate2: " << std::setw(6)<< (k==0? 0:last_Hdiv_error2/Velocity_Hdiv_error2) << std::endl
 				<< "         *          " << std::endl;
 	last_l2_error = Velocity_L2_error;
 	last_H1_error = Velocity_H1_error;
 	last_Hdiv_error1 = Velocity_Hdiv_error1;
-	last_Hdiv_error2 = Velocity_Hdiv_error2;
+//	last_Hdiv_error2 = Velocity_Hdiv_error2;
 
 
   }
@@ -1620,17 +1660,14 @@ namespace Step59
   void StokesProblem<dim>::run ()
   {
     GridGenerator::hyper_cube (triangulation);
-    triangulation.refine_global (2);
+    triangulation.refine_global (0);
+    GridTools::distort_random(0.2, triangulation);
 
-    if (solver_type == SolverType::FGMRES_ILU)
-      std::cout << "Now running with "<< fe.get_name() << std::endl;
-    else if (solver_type == SolverType::FGMRES_GMG)
-      std::cout << "Now running with Multigrid" << std::endl;
-    else
-      std::cout << "Now running with UMFPACK" << std::endl;
+    std::cout << "  Now running with "<< fe.get_name() << std::endl
+    		  << "  Degree: " << pressure_degree << std::endl
+			  << "      *       " << std::endl;
 
-
-    for (unsigned int refinement_cycle = 0; refinement_cycle<6;
+    for (unsigned int refinement_cycle = 0; refinement_cycle<4;
          ++refinement_cycle)
       {
 //        std::cout << "Refinement cycle " << refinement_cycle << std::endl;
@@ -1765,7 +1802,7 @@ int main ()
       deallog.depth_console(0);
 
       const int degree = 1;
-      const int dim = 2;
+      const int dim = 3;
       // options for SolverType: UMFPACK FGMRES_ILU FGMRES_GMG
       StokesProblem<dim> flow_problem(degree, SolverType::FGMRES_ILU);
 
