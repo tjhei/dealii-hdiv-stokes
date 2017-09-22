@@ -1,0 +1,19 @@
+f:
+4*pi**3*nu*(-3*cos(2*R_x*pi) + 2)*sin(2*R_y*pi)*sin(2*R_z*pi) + pi*sin(R_z*pi)*cos(R_x*pi)*cos(R_y*pi)
+2*pi**3*nu*(3*cos(2*R_y*pi) - 2)*sin(2*R_x*pi)*sin(2*R_z*pi) - pi*sin(R_x*pi)*sin(R_y*pi)*sin(R_z*pi)
+2*pi**3*nu*(3*cos(2*R_z*pi) - 2)*sin(2*R_x*pi)*sin(2*R_y*pi) + pi*sin(R_x*pi)*cos(R_y*pi)*cos(R_z*pi)
+0
+
+ * RHS:
+values[0] = 4*pow(M_PI, 3)*nu*(-3*cos(2*R_x*M_PI) + 2)*sin(2*R_y*M_PI)*sin(2*R_z*M_PI) + M_PI*sin(R_z*M_PI)*cos(R_x*M_PI)*cos(R_y*M_PI);
+values[1] = 2*pow(M_PI, 3)*nu*(3*cos(2*R_y*M_PI) - 2)*sin(2*R_x*M_PI)*sin(2*R_z*M_PI) - M_PI*sin(R_x*M_PI)*sin(R_y*M_PI)*sin(R_z*M_PI);
+values[2] = 2*pow(M_PI, 3)*nu*(3*cos(2*R_z*M_PI) - 2)*sin(2*R_x*M_PI)*sin(2*R_y*M_PI) + M_PI*sin(R_x*M_PI)*cos(R_y*M_PI)*cos(R_z*M_PI);
+values[3] = 0;
+
+ * ExactSolution:
+values[0] = 2*M_PI*pow(sin(R_x*M_PI), 2)*sin(2*R_y*M_PI)*sin(2*R_z*M_PI);
+values[1] = -M_PI*sin(2*R_x*M_PI)*pow(sin(R_y*M_PI), 2)*sin(2*R_z*M_PI);
+values[2] = -M_PI*sin(2*R_x*M_PI)*sin(2*R_y*M_PI)*pow(sin(R_z*M_PI), 2);
+values[3] = sin(R_x*M_PI)*sin(R_z*M_PI)*cos(R_y*M_PI);
+
+pressure mean: 0
