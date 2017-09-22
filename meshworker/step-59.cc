@@ -612,7 +612,7 @@ namespace Step59
       template <int dim>
       void RHSIntegrator<dim>::boundary(MeshWorker::DoFInfo<dim> &dinfo, typename MeshWorker::IntegrationInfo<dim> &info) const
       {
-    	  return;
+//    	  return;
         const FEValuesBase<dim> &fe = info.fe_values();
         const unsigned int      n_components  = fe.get_fe().n_components();
         const unsigned int      v_components  = n_components-1;
@@ -849,24 +849,7 @@ namespace Step59
    // the correct boundary condition.
    template <int dim>
    void Estimator<dim>::boundary(MeshWorker::DoFInfo<dim> &, typename MeshWorker::IntegrationInfo<dim> &) const
-   {
-  //   const FEValuesBase<dim> &fe = info.fe_vaues();
-
-  //   std::vector<double> boundary_values(fe.n_quadrature_points);
-  //   Functions::LSingularityFunction exact_solution;
-  //   exact_solution.value_list(fe.get_quadrature_points(), boundary_values);
-
-  //   const std::vector<double> &uh = info.values[0][0];
-
-  //   const unsigned int deg = fe.get_fe().tensor_degree();
-  //   const double penalty = 2. * deg * (deg+1) * dinfo.face->measure() / dinfo.cell->measure();
-
-  //   for (unsigned k=0; k<fe.n_quadrature_points; ++k)
-  //     dinfo.value(0) += penalty * (boundary_values[k] - uh[k]) * (boundary_values[k] - uh[k])
-  //                       * fe.JxW(k);
-//     dinfo.value(0) = 0.0;
-     //*std::sqrt(dinfo.value(0));
-   }
+   {}
 
 
    // Finally, on interior faces, the estimator consists of the jumps of the
@@ -1126,16 +1109,16 @@ namespace Step59
 
     std::vector<types::global_dof_index> dofs_per_block (2);
     DoFTools::count_dofs_per_block (dof_handler, dofs_per_block, block_component);
-//    const unsigned int n_u = dofs_per_block[0],
-//                       n_p = dofs_per_block[1];
-//
-//    std::cout << "\tNumber of active cells: "
-//              << triangulation.n_active_cells()
-//              << std::endl
-//              << "\tNumber of degrees of freedom: "
-//              << dof_handler.n_dofs()
-//              << " (" << n_u << '+' << n_p << ')'
-//              << std::endl;
+    const unsigned int n_u = dofs_per_block[0],
+                       n_p = dofs_per_block[1];
+
+    std::cout << "\tNumber of active cells: "
+              << triangulation.n_active_cells()
+              << std::endl
+              << "\tNumber of degrees of freedom: "
+              << dof_handler.n_dofs()
+              << " (" << n_u << '+' << n_p << ')'
+              << std::endl;
 
     constraints.reinit ();
     if (false)
@@ -1154,7 +1137,6 @@ namespace Step59
         DoFTools::make_hanging_node_constraints (dof_handler, constraints);
         std::set<types::boundary_id> no_normal_flux_boundaries;
         no_normal_flux_boundaries.insert (0);
-
         VectorTools::compute_no_normal_flux_constraints(dof_handler, 0, no_normal_flux_boundaries, constraints);
     }
     if (true)
@@ -1171,7 +1153,7 @@ namespace Step59
     {
       BlockDynamicSparsityPattern csp (dofs_per_block, dofs_per_block);
 //      DoFTools::make_sparsity_pattern (dof_handler, csp, constraints, false);
-      DoFTools::make_flux_sparsity_pattern(dof_handler, csp);
+      DoFTools::make_flux_sparsity_pattern(dof_handler, csp, constraints);
       sparsity_pattern.copy_from (csp);
     }
     system_matrix.reinit (sparsity_pattern);
@@ -1567,7 +1549,7 @@ namespace Step59
 //   	    double Velocity_Hdiv_error2 = errors.block(0).l2_norm();
 
 	std::cout   << " At " << k+1 << "th mesh" << std::endl
-	            << " DoFs: " << dof_handler.n_dofs() << std::endl
+//	            << " DoFs: " << dof_handler.n_dofs() << std::endl
 	            << " L2 error:  " << std::setw(6) << Velocity_L2_error  << std::setw(0)
              	<< " L2_Conv_rate: " << std::setw(6)<< (k==0? 0:last_l2_error/Velocity_L2_error) << std::endl
 				<< " H1 error:  " << std::setw(6) << Velocity_H1_error << std::setw(0)
@@ -1660,14 +1642,12 @@ namespace Step59
   void StokesProblem<dim>::run ()
   {
     GridGenerator::hyper_cube (triangulation);
-    triangulation.refine_global (0);
+    triangulation.refine_global (2);
     GridTools::distort_random(0.2, triangulation);
 
-    std::cout << "  Now running with "<< fe.get_name() << std::endl
-    		  << "  Degree: " << pressure_degree << std::endl
-			  << "      *       " << std::endl;
+    std::cout << "  Now running with "<< fe.get_name() << std::endl;
 
-    for (unsigned int refinement_cycle = 0; refinement_cycle<4;
+    for (unsigned int refinement_cycle = 0; refinement_cycle<7;
          ++refinement_cycle)
       {
 //        std::cout << "Refinement cycle " << refinement_cycle << std::endl;
@@ -1686,18 +1666,21 @@ namespace Step59
               case 1: // kelly u
                 {
 //                  std::cout << " Kelly..." << std::endl;
-                  Vector<float> estimated_error_per_cell (triangulation.n_active_cells());
-                  FEValuesExtractors::Vector velocity(0);
-                  KellyErrorEstimator<dim>::estimate (dof_handler,
-                                                      QGauss<dim-1>(pressure_degree+2),
-                                                      typename FunctionMap<dim>::type(),
-                                                      solution,
-                                                      estimated_error_per_cell,
-                                                      fe.component_mask(velocity));
+              	  Vector<float> estimated_error_per_cell (triangulation.n_global_active_cells());
+              	  FEValuesExtractors::Vector velocity(0);
 
-                  GridRefinement::refine_and_coarsen_fixed_number (triangulation,
-                                                                   estimated_error_per_cell,
-                                                                   0.3, 0.0);
+                  KellyErrorEstimator<dim>::estimate(dof_handler,
+                                                       QGauss<dim-1>(fe.degree+2),
+                                                       typename FunctionMap<dim>::type(),
+                                                       solution,
+                                                       estimated_error_per_cell,
+                                                       fe.component_mask(velocity)
+                                                      );
+
+                  GridRefinement::refine_and_coarsen_fixed_number(triangulation,
+                                                      estimated_error_per_cell,
+                                                      0.3, 0.0);
+
                   triangulation.execute_coarsening_and_refinement ();
 
                   break;
@@ -1705,48 +1688,51 @@ namespace Step59
               case 2: // res_based
               {
 //            	  std::cout << " Residual based..." << std::endl;
-            	  BlockVector<double> estimates(1);
-        		  estimates.block(0).reinit(triangulation.n_active_cells());
-        		  estimates.collect_sizes();
-        		  unsigned int i=0;
-        		  for (typename Triangulation<dim>::active_cell_iterator cell = triangulation.begin_active();
+              	std::vector<unsigned int> old_user_indices;
+              	triangulation.save_user_indices(old_user_indices);
+            	BlockVector<double> estimates(1);
+        		estimates.block(0).reinit(triangulation.n_active_cells());
+        		estimates.collect_sizes();
+        		unsigned int i=0;
+        		for (typename Triangulation<dim>::active_cell_iterator cell = triangulation.begin_active();
         		 	   cell != triangulation.end(); ++cell,++i)
         		 	   cell->set_user_index(i);
 
-        		  MeshWorker::IntegrationInfoBox<dim> info_box;
-        		  const unsigned int n_gauss_points = dof_handler.get_fe().tensor_degree()+1;
-        		  info_box.initialize_gauss_quadrature(n_gauss_points, n_gauss_points+1, n_gauss_points);
+        		MeshWorker::IntegrationInfoBox<dim> info_box;
+        		const unsigned int n_gauss_points = dof_handler.get_fe().tensor_degree()+1;
+        		info_box.initialize_gauss_quadrature(n_gauss_points, n_gauss_points+1, n_gauss_points);
 
-        		 AnyData solution_data;
-        		 solution_data.add<const BlockVector<double>*>(&solution, "solution");
+        		AnyData solution_data;
+        		solution_data.add<const BlockVector<double>*>(&solution, "solution");
 
-        		 info_box.cell_selector.add("solution", true, true, true);
-        		 info_box.boundary_selector.add("solution", true, true, false);
-        		 info_box.face_selector.add("solution", true, true, false);
+        		info_box.cell_selector.add("solution", true, true, true);
+        		info_box.boundary_selector.add("solution", true, true, false);
+        		info_box.face_selector.add("solution", true, true, false);
 
-        		 info_box.add_update_flags_cell(update_quadrature_points);
-        		 info_box.add_update_flags_boundary(update_quadrature_points);
-        		 static MappingQ1<dim> mapping;
-        		 info_box.initialize(fe, mapping , solution_data, solution);
+        		info_box.add_update_flags_cell(update_quadrature_points);
+        		info_box.add_update_flags_boundary(update_quadrature_points);
+        		static MappingQ1<dim> mapping;
+        		info_box.initialize(fe, mapping , solution_data, solution);
+        		MeshWorker::DoFInfo<dim> dof_info(dof_handler);
 
-        		 MeshWorker::DoFInfo<dim> dof_info(dof_handler);
-
-        		 MeshWorker::Assembler::CellsAndFaces<double> assembler;
-        		 AnyData out_data;
-        		 out_data.add<BlockVector<double>*>(&estimates, "cells");
-        		 assembler.initialize(out_data, false);
-                 Estimator<dim> integrator(1.0);
-        	     MeshWorker::integration_loop<dim, dim> (dof_handler.begin_active(),
+        		MeshWorker::Assembler::CellsAndFaces<double> assembler;
+        		AnyData out_data;
+        		out_data.add<BlockVector<double>*>(&estimates, "cells");
+        		assembler.initialize(out_data, false);
+                Estimator<dim> integrator(1.0);
+        	    MeshWorker::integration_loop<dim, dim> (dof_handler.begin_active(),
         	    		  	  	  	  	  	  	  	  	 dof_handler.end(),
         	 											 dof_info, info_box,
         												 integrator, assembler);
 
-        	     GridRefinement::refine_and_coarsen_fixed_number (triangulation,
+        	    GridRefinement::refine_and_coarsen_fixed_number (triangulation,
         	                                                      estimates.block(0),
-        	                                                      0.3, 0.03);
+        	                                                      0.3, 0.0);
 
-        		triangulation.execute_coarsening_and_refinement ();
-        		std::cout << " estimates: " << estimates.block(0).l2_norm() << std::endl;
+        	    triangulation.load_user_indices(old_user_indices);
+
+        	 	triangulation.execute_coarsening_and_refinement ();
+        	    std::cout << " estimates: " << estimates.block(0).l2_norm() << std::endl;
         		break;
               }
 
@@ -1801,8 +1787,8 @@ int main ()
 
       deallog.depth_console(0);
 
-      const int degree = 1;
-      const int dim = 3;
+      const int degree = 2;
+      const int dim = 2;
       // options for SolverType: UMFPACK FGMRES_ILU FGMRES_GMG
       StokesProblem<dim> flow_problem(degree, SolverType::FGMRES_ILU);
 
