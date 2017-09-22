@@ -129,11 +129,6 @@ namespace Step59
   {
     Assert (component <= 2+1, ExcIndexRange(component,0,2+1));
 
-    using numbers::PI;
-    const double x = p(0);
-    const double y = p(1);
-
-
     // smooth corner
 
 //    const double p_int = - 2.0*exp(1.0)*cos(1.0)-2.0+2.0*cos(1.0)+2.0*exp(1.0);
@@ -145,28 +140,25 @@ namespace Step59
 //    if (component == 2)
 //      return 2*exp(x)*sin(-y) - p_int;
 
-
-    // l singular:
-
-//    Functions::StokesLSingularity s;
-//    return s.value(p, component);
-
-    // nonzero on BD's
-//      if (component == 0)
-//          return sin (PI * x);
-//      if (component == 1)
-//          return - PI * y * cos(PI * x);
-//      if (component == 2)
-//          return sin (PI * x) * cos (PI * y);
-
+    if (false)
+    {
+        using numbers::PI;
+        const double x = p(0);
+        const double y = p(1);
     // zero on BD's
-    if (component == 0)
-    	return PI*sin(PI*x)*sin(PI*x)*sin(2.0*PI*y);
-    if (component == 1)
-    	return -PI*sin(PI*y)*sin(PI*y)*sin(2.0*PI*x);
-    if (component == 2)
-    	return 0.0;
-
+    	if (component == 0)
+    		return PI*sin(PI*x)*sin(PI*x)*sin(2.0*PI*y);
+    	if (component == 1)
+    		return -PI*sin(PI*y)*sin(PI*y)*sin(2.0*PI*x);
+    	if (component == 2)
+    		return 0.0;
+    }
+    else
+    {
+    // l singular:
+    	Functions::StokesLSingularity s;
+    	return s.value(p, component);
+    }
     return 0;
   }
 
@@ -202,15 +194,8 @@ namespace Step59
   {
     Assert (component <= 2, ExcIndexRange(component,0,2+1));
 
-//    Functions::StokesLSingularity s;
-//    std::vector<Point<2> > points(1, p);
-//    std::vector<std::vector<Tensor<1,2> > > gradients(1);
-//    gradients[0].resize(2+1);
-//    s.vector_gradient_list (points, gradients);
-//    return gradients[0][component];
-    //return s.gradient(p, component);
-
-
+    if (false)
+    {
     using numbers::PI;
     const double x = p(0);
     const double y = p(1);
@@ -241,6 +226,16 @@ namespace Step59
       }
 
     return return_value;
+    }
+    else
+    {
+        Functions::StokesLSingularity s;
+        std::vector<Point<2> > points(1, p);
+        std::vector<std::vector<Tensor<1,2> > > gradients(1);
+        gradients[0].resize(2+1);
+        s.vector_gradient_list (points, gradients);
+        return gradients[0][component];
+    }
   }
 
   template <>
@@ -284,6 +279,27 @@ namespace Step59
     return return_value;
   }
 
+  template <int dim>
+  class VelocitySolution : public Function<dim>
+  {
+  public:
+    VelocitySolution () : Function<dim>(dim) {}
+    virtual double value (const Point<dim> &p,
+                          const unsigned int component = 0) const;
+  };
+
+  template <int dim>
+  double
+  VelocitySolution<dim>::value (const Point<dim> &p,
+                      const unsigned int component) const
+  {
+	  Solution<dim> solution;
+	  return solution.value(p, component);
+  }
+
+
+
+
   // Implementation of $f$. See the introduction for more information.
   template <int dim>
   class RightHandSide : public Function<dim>
@@ -307,24 +323,25 @@ namespace Step59
     double y = p(1);
     double nu = 1.0;
 
+    if (false)
+    {
     // RHS for 0 BD's
     if (component == 0)
-//      return PI * PI * sin(PI * x) + PI * cos(PI * x) * cos(PI * y);
-//    	return -nu*2.0*PI*PI*PI*(2.0*cos(2.0*PI*x)-1)*sin(2.0*PI*y)-PI*sin(PI*x)*sin(PI*y);
     	return -nu*2.0*PI*PI*PI*(-2.0*sin(PI*x)*sin(PI*x)+cos(2.*PI*x))*sin(2.0*PI*y)-PI*sin(PI*x)*sin(PI*y);
     if (component == 1)
-//      return - PI * PI * PI * y * cos(PI * x) - PI * sin(PI * y) * sin(PI * x);
     	return nu*2.0*PI*PI*PI*(2.0*cos(2.0*PI*y)-1)*sin(2.0*PI*x)+PI*cos(PI*x)*cos(PI*y);
     if (component == 2)
     	return 0.0;
-
-    // RHS for non-0 BD's
-//    if (component == 0)
-//      return PI * PI * sin(PI * x) + PI * cos(PI * x) * cos(PI * y);
-//    if (component == 1)
-//      return - PI * PI * PI * y * cos(PI * x) - PI * sin(PI * y) * sin(PI * x);
-//    if (component == 2)
-//      return 0;
+    }
+    else
+    {
+    	if (component == 0)
+    		return 0;
+    	if (component == 1)
+    		return 0;
+    	if (component == 2)
+    		return 0;
+    }
 
     return 0;
   }
@@ -393,7 +410,8 @@ namespace Step59
       const unsigned int      v_components  = n_components-1;
       const unsigned int      p_components  = n_components-1;
 
-      RightHandSide<dim> right_hand_side;
+//      RightHandSide<dim> right_hand_side;
+      ZeroFunction<dim> right_hand_side(dim+1);
       std::vector<Vector<double> >   rhs_values (n_q_points, Vector<double>(dim+1));
       right_hand_side.vector_value_list(fe.get_quadrature_points(), rhs_values);
 
@@ -401,29 +419,7 @@ namespace Step59
       {
       	for (unsigned int i=0; i<n_dofs; ++i)
       	{
-//      		double Mii = 0.0;
-//      		for (unsigned int d=0; d<v_components; ++d)
-//      			Mii += (fe.shape_grad_component(i,k,d) * fe.shape_grad_component(i,k,d))*fe.JxW(k); // grad_u*grad_v
-//
-//    		Mii += (fe.shape_value_component(i,k,p_components) * fe.shape_value_component(i,k,p_components))*fe.JxW(k); // p*q
-//
-//      		dinfo.matrix(0,false).matrix(i, i) += Mii;
-//
-//      		for (unsigned int j=i+1; j<n_dofs; ++j)
-//      		{
-//      			double Mij = 0.0;
-//      			for (unsigned int d=0; d<v_components; ++d)
-//      			{
-//      				Mij += (fe.shape_grad_component(j,k,d) * fe.shape_grad_component(i,k,d))*fe.JxW(k);  // grad_u*grad_v
-//      				Mij += -(fe.shape_value_component(j,k,p_components)*fe.shape_grad_component(i,k,d)[d])*fe.JxW(k); // p*div_v
-//      			}
-//
-//      			Mij += (fe.shape_value_component(j,k,p_components) * fe.shape_value_component(i,k,p_components))*fe.JxW(k); // p*q
-//
-//      			dinfo.matrix(0,false).matrix(j, i) += Mij;
-//      			dinfo.matrix(0,false).matrix(i, j) += Mij;
-//      		}
-
+      		// matrix
       		for (unsigned int j=0; j<n_dofs; ++j)
       		{
       			for (unsigned int d=0; d< v_components;++d)
@@ -454,14 +450,17 @@ namespace Step59
       typename MeshWorker::IntegrationInfo<dim> &info) const
     {
 //    	return;
-      const unsigned int deg = info.fe_values().get_fe().tensor_degree();
-
-  //    LocalIntegrators::Laplace::nitsche_matrix(
-  //      dinfo.matrix(0,false).matrix, info.fe_values(0),
-  //      LocalIntegrators::Laplace::compute_penalty(dinfo, dinfo, deg, deg));
-
-      double penalty = LocalIntegrators::Laplace::compute_penalty(dinfo, dinfo, deg, deg);
       const FEValuesBase<dim> &fe           = info.fe_values();
+      const unsigned int deg = fe.get_fe().tensor_degree();
+
+//      std::vector<Vector<double>> boundary_values(fe.n_quadrature_points);
+      std::vector<Vector<double> >  boundary_values (fe.n_quadrature_points, Vector<double>(dim+1));
+
+      Solution<dim> exact_solution;
+      exact_solution.vector_value_list(fe.get_quadrature_points(), boundary_values);
+
+      const double penalty_bd = 2. * deg * (deg+1) * dinfo.face->measure() / dinfo.cell->measure();
+      double penalty = LocalIntegrators::Laplace::compute_penalty(dinfo, dinfo, deg, deg);
       const unsigned int      n_q_points    = fe.n_quadrature_points;
       const unsigned int      n_dofs        = fe.dofs_per_cell;
       const unsigned int      n_components  = fe.get_fe().n_components();
@@ -472,6 +471,7 @@ namespace Step59
       {
       	const Tensor<1,dim> n = fe.normal_vector(k);
       	for (unsigned int i=0; i<n_dofs; ++i)
+      	{
       		for (unsigned int j=0; j<n_dofs; ++j)
       			for (unsigned int d=0; d<v_components; ++d)
       			{
@@ -486,7 +486,18 @@ namespace Step59
       		/*  b(q, u)_bd = {q}[u]n = p_i*u_j*n */
       				dinfo.matrix(0,false).matrix(i,j) +=
       						    fe.shape_value_component(i,k,p_components)*(fe.shape_value_component(j,k,d)*n[d])*fe.JxW(k);
+
       			}
+
+      		for (unsigned int d=0; d< v_components; ++d)
+      		{
+      		    dinfo.vector(0).block(0)(i) += ( fe.shape_value_component(i,k,d) * penalty_bd * boundary_values[k][d]
+												 -(n * fe.shape_grad_component(i,k,d)) * boundary_values[k][d])
+												 * fe.JxW(k);
+
+			    dinfo.vector(0).block(0)(i) += fe.shape_value_component(i,k,p_components)*boundary_values[k][d]*n[d]*fe.JxW(k);
+      		}
+      	}
       }
     }
 
@@ -627,11 +638,18 @@ namespace Step59
         const double penalty = 2. * deg * (deg+1) * dinfo.face->measure() / dinfo.cell->measure();
 
         for (unsigned k=0; k<fe.n_quadrature_points; ++k)
+        {
+          const Tensor<1,dim> n = fe.normal_vector(k);
           for (unsigned int i=0; i<fe.dofs_per_cell; ++i)
         	  for (unsigned int d = 0; d<v_components; ++d)
-        		  info.vector(0).block(0)(i) += ( fe.shape_value_component(i,k,d) * penalty * boundary_values[k][d]
-												 -(fe.normal_vector(k) * fe.shape_grad_component(i,k,d)) * boundary_values[k][d])
+        	  {
+        		  dinfo.vector(0).block(0)(i) += ( fe.shape_value_component(i,k,d) * penalty * boundary_values[k][d]
+												 -(n * fe.shape_grad_component(i,k,d)) * boundary_values[k][d])
 												 * fe.JxW(k);
+
+				  dinfo.vector(0).block(0)(i) += fe.shape_value_component(i,k,p_components)*boundary_values[k][d]*n[d]*fe.JxW(k);
+        	  }
+        }
       }
 
 
@@ -1057,7 +1075,7 @@ namespace Step59
     triangulation (Triangulation<dim>::maximum_smoothing),
     // Finite element for the velocity only:
     velocity_fe (FE_RaviartThomas<dim>(pressure_degree), 1),
-//    velocity_fe (FE_RaviartThomas<dim>(pressure_degree+1), dim-1),
+//    velocity_fe (FE_DGQ<dim>(pressure_degree+1), dim),
     // Finite element for the whole system:
     fe (velocity_fe, 1, FE_DGQ<dim> (pressure_degree), 1),
     dof_handler (triangulation),
@@ -1143,9 +1161,7 @@ namespace Step59
     {
         FEValuesExtractors::Vector velocities(0);
         DoFTools::make_hanging_node_constraints (dof_handler, constraints);
-        std::set<types::boundary_id> no_normal_flux_boundaries;
-        no_normal_flux_boundaries.insert (0);
-    	VectorTools::project_boundary_values_div_conforming(dof_handler, 0, ZeroFunction<dim>(dim), 0, constraints);
+    	VectorTools::project_boundary_values_div_conforming(dof_handler, 0, VelocitySolution<dim>(), 0, constraints);
     }
 
     constraints.close ();
@@ -1550,11 +1566,11 @@ namespace Step59
 
 	std::cout   << " At " << k+1 << "th mesh" << std::endl
 //	            << " DoFs: " << dof_handler.n_dofs() << std::endl
-	            << " L2 error:  " << std::setw(6) << Velocity_L2_error  << std::setw(0)
+	            << " L2 error:  " << std::setw(12) << Velocity_L2_error  << std::setw(0)
              	<< " L2_Conv_rate: " << std::setw(6)<< (k==0? 0:last_l2_error/Velocity_L2_error) << std::endl
-				<< " H1 error:  " << std::setw(6) << Velocity_H1_error << std::setw(0)
+				<< " H1 error:  " << std::setw(12) << Velocity_H1_error << std::setw(0)
 				<< " H1_Conv_rate: " << std::setw(6)<< (k==0? 0:last_H1_error/Velocity_H1_error) << std::endl
-				<< " Hdiv error1:  " << std::setw(6) << Velocity_Hdiv_error1 << std::setw(0)
+				<< " Hdiv error1:  " << std::setw(12) << Velocity_Hdiv_error1 << std::setw(0)
 				<< " Hdiv_Conv_rate1: " << std::setw(6)<< (k==0? 0:last_Hdiv_error1/Velocity_Hdiv_error1) << std::endl
 //				<< " Hdiv error2:  " << std::setw(6) << Velocity_Hdiv_error2 << std::setw(0)
 //				<< " Hdiv_Conv_rate2: " << std::setw(6)<< (k==0? 0:last_Hdiv_error2/Velocity_Hdiv_error2) << std::endl
@@ -1641,20 +1657,21 @@ namespace Step59
   template <int dim>
   void StokesProblem<dim>::run ()
   {
-    GridGenerator::hyper_cube (triangulation);
-    triangulation.refine_global (2);
-    GridTools::distort_random(0.2, triangulation);
+//    GridGenerator::hyper_cube (triangulation);
+    GridGenerator::hyper_L (triangulation);
+    triangulation.refine_global (1);
+//    GridTools::distort_random(0.2, triangulation);
 
     std::cout << "  Now running with "<< fe.get_name() << std::endl;
 
-    for (unsigned int refinement_cycle = 0; refinement_cycle<7;
+    for (unsigned int refinement_cycle = 0; refinement_cycle<8;
          ++refinement_cycle)
       {
 //        std::cout << "Refinement cycle " << refinement_cycle << std::endl;
 
         if (refinement_cycle > 0)
           {
-            int ref_type = 0;
+            int ref_type = 2;
             switch (ref_type)
               {
               case 0: // global
@@ -1732,7 +1749,7 @@ namespace Step59
         	    triangulation.load_user_indices(old_user_indices);
 
         	 	triangulation.execute_coarsening_and_refinement ();
-        	    std::cout << " estimates: " << estimates.block(0).l2_norm() << std::endl;
+//        	    std::cout << " estimates: " << estimates.block(0).l2_norm() << std::endl;
         		break;
               }
 
