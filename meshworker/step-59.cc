@@ -42,6 +42,7 @@
 #include <deal.II/grid/tria_boundary_lib.h>
 #include <deal.II/grid/grid_tools.h>
 #include <deal.II/grid/grid_refinement.h>
+#include <deal.II/grid/manifold_lib.h>
 
 #include <deal.II/dofs/dof_handler.h>
 #include <deal.II/dofs/dof_renumbering.h>
@@ -56,6 +57,7 @@
 #include <deal.II/fe/fe_dgq.h>
 #include <deal.II/fe/fe_bdm.h>
 #include <deal.II/fe/fe_raviart_thomas.h>
+#include <deal.II/fe/mapping_q.h>
 
 #include <deal.II/numerics/vector_tools.h>
 #include <deal.II/numerics/matrix_tools.h>
@@ -101,6 +103,12 @@ namespace Step59
     enum type {FGMRES_ILU, FGMRES_GMG, UMFPACK};
   };
 
+  struct GeoType
+  {
+	enum type {Cube, Cycle, L_sharp};
+  };
+
+
   // @sect3{Functions for Solution and Righthand side}
   //
   // The class Solution is used to define the boundary conditions and to
@@ -140,7 +148,7 @@ namespace Step59
 //    if (component == 2)
 //      return 2*exp(x)*sin(-y) - p_int;
 
-    if (false)
+    if (true)
     {
         using numbers::PI;
         const double x = p(0);
@@ -194,7 +202,7 @@ namespace Step59
   {
     Assert (component <= 2, ExcIndexRange(component,0,2+1));
 
-    if (false)
+    if (true)
     {
     using numbers::PI;
     const double x = p(0);
@@ -225,8 +233,9 @@ namespace Step59
         return_value[1] =  - PI * sin (PI * x) * sin(PI * y);
       }
 
-    return return_value;
+    	return return_value;
     }
+
     else
     {
         Functions::StokesLSingularity s;
@@ -323,7 +332,7 @@ namespace Step59
     double y = p(1);
     double nu = 1.0;
 
-    if (false)
+    if (true)
     {
     // RHS for 0 BD's
     if (component == 0)
@@ -410,8 +419,8 @@ namespace Step59
       const unsigned int      v_components  = n_components-1;
       const unsigned int      p_components  = n_components-1;
 
-//      RightHandSide<dim> right_hand_side;
-      ZeroFunction<dim> right_hand_side(dim+1);
+      RightHandSide<dim> right_hand_side;
+//      ZeroFunction<dim> right_hand_side(dim+1);
       std::vector<Vector<double> >   rhs_values (n_q_points, Vector<double>(dim+1));
       right_hand_side.vector_value_list(fe.get_quadrature_points(), rhs_values);
 
@@ -453,9 +462,7 @@ namespace Step59
       const FEValuesBase<dim> &fe           = info.fe_values();
       const unsigned int deg = fe.get_fe().tensor_degree();
 
-//      std::vector<Vector<double>> boundary_values(fe.n_quadrature_points);
       std::vector<Vector<double> >  boundary_values (fe.n_quadrature_points, Vector<double>(dim+1));
-
       Solution<dim> exact_solution;
       exact_solution.vector_value_list(fe.get_quadrature_points(), boundary_values);
 
@@ -1012,8 +1019,10 @@ namespace Step59
   class StokesProblem
   {
   public:
-    StokesProblem (const unsigned int pressure_degree,
-                   SolverType::type solver_type);
+    StokesProblem (FiniteElement<dim> &fe,
+    		       const unsigned int pressure_degree,
+                   SolverType::type solver_type,
+				   GeoType::type geo_type);
     void run ();
 
   private:
@@ -1029,10 +1038,10 @@ namespace Step59
 
     const unsigned int            pressure_degree;
     SolverType::type              solver_type;
+    GeoType::type                 geo_type;
 
     Triangulation<dim>            triangulation;
-    FESystem<dim>                 velocity_fe;
-    FESystem<dim>                 fe;
+    FiniteElement<dim>            &fe;
     DoFHandler<dim>               dof_handler;
     DoFHandler<dim>               velocity_dof_handler;
 
@@ -1066,18 +1075,22 @@ namespace Step59
 
 
   template <int dim>
-  StokesProblem<dim>::StokesProblem (const unsigned int pressure_degree,
-                                     SolverType::type solver_type)
+  StokesProblem<dim>::StokesProblem (FiniteElement<dim> &fe,
+		     	 	 	 	 	 	 const unsigned int pressure_degree,
+                                     SolverType::type solver_type,
+									 GeoType::type geo_type)
     :
     pressure_degree (pressure_degree),
     solver_type (solver_type),
+	geo_type(geo_type),
 //    triangulation (Triangulation<dim>::limit_level_difference_at_vertices),
     triangulation (Triangulation<dim>::maximum_smoothing),
     // Finite element for the velocity only:
-    velocity_fe (FE_RaviartThomas<dim>(pressure_degree), 1),
-//    velocity_fe (FE_DGQ<dim>(pressure_degree+1), dim),
-    // Finite element for the whole system:
-    fe (velocity_fe, 1, FE_DGQ<dim> (pressure_degree), 1),
+//    velocity_fe (FE_RaviartThomas<dim>(pressure_degree), 1),
+////    velocity_fe (FE_BDM<dim>(pressure_degree+1), 1),
+//    // Finite element for the whole system:
+//    fe (velocity_fe, 1, FE_DGQ<dim> (pressure_degree), 1),
+	fe(fe),
     dof_handler (triangulation),
     velocity_dof_handler (triangulation),
     computing_timer (std::cout, TimerOutput::never,
@@ -1353,7 +1366,8 @@ namespace Step59
 	  system_matrix=0;
 	  system_rhs=0;
 
-	  static MappingQ1<dim> mapping;
+//	  static MappingQ1<dim> mapping;
+	  static MappingQ<dim> mapping(1);
       MeshWorker::IntegrationInfoBox<dim> info_box;
       UpdateFlags update_flags = update_quadrature_points | update_values | update_gradients;
       info_box.add_update_flags_all(update_flags);
@@ -1424,16 +1438,16 @@ namespace Step59
 
 //        std::cout << "   Computing preconditioner..." << std::endl << std::flush;
 
-//        SparseDirectUMFPACK  A_preconditioner;
-//        A_preconditioner.initialize(system_matrix.block(0,0));
+        SparseDirectUMFPACK  A_preconditioner;
+        A_preconditioner.initialize(system_matrix.block(0,0));
 
-        SparseILU<double> A_preconditioner;
-        A_preconditioner.initialize (system_matrix.block(0,0));
+//        SparseILU<double> A_preconditioner;
+//        A_preconditioner.initialize (system_matrix.block(0,0));
 
         SparseILU<double> S_preconditioner;
         S_preconditioner.initialize (pressure_mass_matrix);
 
-        const BlockSchurPreconditioner<SparseILU<double>, SparseILU<double> >
+        const BlockSchurPreconditioner<SparseDirectUMFPACK, SparseILU<double> >
         preconditioner (system_matrix,
                         pressure_mass_matrix,
                         A_preconditioner,
@@ -1566,9 +1580,9 @@ namespace Step59
 
 	std::cout   << " At " << k+1 << "th mesh" << std::endl
 //	            << " DoFs: " << dof_handler.n_dofs() << std::endl
-	            << " L2 error:  " << std::setw(12) << Velocity_L2_error  << std::setw(0)
+	            << " L2 error:     " << std::setw(12) << Velocity_L2_error  << std::setw(0)
              	<< " L2_Conv_rate: " << std::setw(6)<< (k==0? 0:last_l2_error/Velocity_L2_error) << std::endl
-				<< " H1 error:  " << std::setw(12) << Velocity_H1_error << std::setw(0)
+				<< " H1 error:     " << std::setw(12) << Velocity_H1_error << std::setw(0)
 				<< " H1_Conv_rate: " << std::setw(6)<< (k==0? 0:last_H1_error/Velocity_H1_error) << std::endl
 				<< " Hdiv error1:  " << std::setw(12) << Velocity_Hdiv_error1 << std::setw(0)
 				<< " Hdiv_Conv_rate1: " << std::setw(6)<< (k==0? 0:last_Hdiv_error1/Velocity_Hdiv_error1) << std::endl
@@ -1657,21 +1671,35 @@ namespace Step59
   template <int dim>
   void StokesProblem<dim>::run ()
   {
-//    GridGenerator::hyper_cube (triangulation);
-    GridGenerator::hyper_L (triangulation);
+	if (geo_type == GeoType::Cube)
+		GridGenerator::hyper_cube (triangulation);
+
+	if (geo_type == GeoType::Cycle)
+	{
+		GridGenerator::hyper_ball (triangulation);
+		static const SphericalManifold<dim> boundary;
+		triangulation.set_all_manifold_ids_on_boundary (0);
+		triangulation.set_manifold (0, boundary);
+	}
+	if (geo_type == GeoType::L_sharp)
+		GridGenerator::hyper_L (triangulation);
+
+	if (false)
+		GridTools::distort_random(0.2, triangulation);
+
+
     triangulation.refine_global (1);
-//    GridTools::distort_random(0.2, triangulation);
 
     std::cout << "  Now running with "<< fe.get_name() << std::endl;
 
-    for (unsigned int refinement_cycle = 0; refinement_cycle<8;
+    for (unsigned int refinement_cycle = 0; refinement_cycle<6;
          ++refinement_cycle)
       {
 //        std::cout << "Refinement cycle " << refinement_cycle << std::endl;
 
         if (refinement_cycle > 0)
           {
-            int ref_type = 2;
+            int ref_type = 0;
             switch (ref_type)
               {
               case 0: // global
@@ -1806,8 +1834,11 @@ int main ()
 
       const int degree = 2;
       const int dim = 2;
-      // options for SolverType: UMFPACK FGMRES_ILU FGMRES_GMG
-      StokesProblem<dim> flow_problem(degree, SolverType::FGMRES_ILU);
+      FESystem<dim> fe(FE_RaviartThomas<dim>(degree), 1, FE_DGQ<dim>(degree), 1);
+      StokesProblem<dim> flow_problem(fe,
+    		                          degree,
+									  SolverType::FGMRES_ILU,
+									  GeoType::L_sharp);
 
       flow_problem.run ();
     }
