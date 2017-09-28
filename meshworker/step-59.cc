@@ -106,11 +106,7 @@ namespace Step59
 
   struct GeoType
   {
-<<<<<<< HEAD
-	enum type {Cube, Circle, L_shape};
-=======
-  enum type {Cube, Circle, L_shape, L_shape_diagonal};
->>>>>>> 025d1e2e8bac22211b7f229325e38d3e135e5879
+	  enum type {Cube, Circle, L_shape, L_shape_diagonal};
   };
 
 
@@ -488,11 +484,7 @@ namespace Step59
       			for (unsigned int d=0; d<v_components; ++d)
       			{
       				dinfo.matrix(0,false).matrix(i,j) +=
-<<<<<<< HEAD
-      						   (fe.shape_value_component(i,k,d) * penalty * fe.shape_value_component(j,k,d)
-=======
 				  (/*2. * */ fe.shape_value_component(i,k,d) * penalty * fe.shape_value_component(j,k,d)
->>>>>>> 025d1e2e8bac22211b7f229325e38d3e135e5879
       				           - (n * fe.shape_grad_component(i,k,d)) * fe.shape_value_component(j,k,d)
 						    - (n * fe.shape_grad_component(j,k,d)) * fe.shape_value_component(i,k,d))*fe.JxW(k);
 
@@ -1698,17 +1690,8 @@ namespace Step59
 	if (geo_type == GeoType::Cube)
 		GridGenerator::hyper_cube (triangulation, -1, 1);
 
-<<<<<<< HEAD
-	if (geo_type == GeoType::Circle)
-	{
-		GridGenerator::hyper_ball (triangulation);
-		static const SphericalManifold<dim> boundary;
-		triangulation.set_all_manifold_ids_on_boundary (0);
-		triangulation.set_manifold (0, boundary);
-	}
 	if (geo_type == GeoType::L_shape)
 		GridGenerator::hyper_L (triangulation);
-=======
   if (geo_type == GeoType::Circle)
     {
       GridGenerator::hyper_ball (triangulation);
@@ -1736,8 +1719,6 @@ namespace Step59
       cell->vertex(2)(0)=0.0;
       cell->vertex(1)(0)=-1.0;
     }
->>>>>>> 025d1e2e8bac22211b7f229325e38d3e135e5879
-
 	if (false)
 		GridTools::distort_random(0.2, triangulation);
 
@@ -1897,15 +1878,9 @@ int main ()
       //      FESystem<dim> fe(FE_BDM<dim>(degree), 1, FE_DGP<dim>(degree), 1);
 
       StokesProblem<dim> flow_problem(fe,
-<<<<<<< HEAD
-    		                          degree,
-									  SolverType::FGMRES_ILU,
-									  GeoType::Cube);
-=======
                                       degree,
                                       SolverType::FGMRES_ILU,
                                       GeoType::Circle);
->>>>>>> 025d1e2e8bac22211b7f229325e38d3e135e5879
 
       flow_problem.run ();
     }
