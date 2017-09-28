@@ -40,6 +40,7 @@
 #include <deal.II/grid/tria_accessor.h>
 #include <deal.II/grid/tria_iterator.h>
 #include <deal.II/grid/tria_boundary_lib.h>
+#include <deal.II/grid/grid_in.h>
 #include <deal.II/grid/grid_tools.h>
 #include <deal.II/grid/grid_refinement.h>
 #include <deal.II/grid/manifold_lib.h>
@@ -105,7 +106,11 @@ namespace Step59
 
   struct GeoType
   {
+<<<<<<< HEAD
 	enum type {Cube, Circle, L_shape};
+=======
+  enum type {Cube, Circle, L_shape, L_shape_diagonal};
+>>>>>>> 025d1e2e8bac22211b7f229325e38d3e135e5879
   };
 
 
@@ -159,7 +164,7 @@ namespace Step59
     	if (component == 1)
     		return -PI*sin(PI*y)*sin(PI*y)*sin(2.0*PI*x);
     	if (component == 2)
-    		return 0.0;
+        return cos(PI*x)*sin(PI*y);
     }
     else
     {
@@ -467,7 +472,7 @@ namespace Step59
       exact_solution.vector_value_list(fe.get_quadrature_points(), boundary_values);
 
       const double penalty_bd = 2. * deg * (deg+1) * dinfo.face->measure() / dinfo.cell->measure();
-      double penalty = LocalIntegrators::Laplace::compute_penalty(dinfo, dinfo, deg, deg);
+      double penalty = 4.0 * LocalIntegrators::Laplace::compute_penalty(dinfo, dinfo, deg, deg);
       const unsigned int      n_q_points    = fe.n_quadrature_points;
       const unsigned int      n_dofs        = fe.dofs_per_cell;
       const unsigned int      n_components  = fe.get_fe().n_components();
@@ -483,9 +488,13 @@ namespace Step59
       			for (unsigned int d=0; d<v_components; ++d)
       			{
       				dinfo.matrix(0,false).matrix(i,j) +=
+<<<<<<< HEAD
       						   (fe.shape_value_component(i,k,d) * penalty * fe.shape_value_component(j,k,d)
+=======
+				  (/*2. * */ fe.shape_value_component(i,k,d) * penalty * fe.shape_value_component(j,k,d)
+>>>>>>> 025d1e2e8bac22211b7f229325e38d3e135e5879
       				           - (n * fe.shape_grad_component(i,k,d)) * fe.shape_value_component(j,k,d)
-      				           - (n * fe.shape_grad_component(j,k,d)) * fe.shape_value_component(i,k,d))*fe.JxW(k);
+						    - (n * fe.shape_grad_component(j,k,d)) * fe.shape_value_component(i,k,d))*fe.JxW(k);
 
       		/*  b(p, v)_bd = {p}[v]n = p_j*u_i*n */
       				dinfo.matrix(0,false).matrix(i,j) +=
@@ -524,7 +533,7 @@ namespace Step59
   //      info1.fe_values(0), info2.fe_values(0),
   //      LocalIntegrators::Laplace::compute_penalty(dinfo1, dinfo2, deg, deg));
 
-      double penalty = LocalIntegrators::Laplace::compute_penalty(dinfo1, dinfo2, deg, deg);
+      double penalty = 4.0 * LocalIntegrators::Laplace::compute_penalty(dinfo1, dinfo2, deg, deg);
       const FEValuesBase<dim> &fe1          = info1.fe_values(0);
       const FEValuesBase<dim> &fe2          = info2.fe_values(0);
       const unsigned int      n_q_points    = fe1.n_quadrature_points;
@@ -1491,6 +1500,8 @@ namespace Step59
   void StokesProblem<dim>::compute_errors (unsigned int k)
   {
     const ComponentSelectFunction<dim> velocity_mask(std::make_pair(0, dim), dim+1);
+    const ComponentSelectFunction<dim> pressure_mask(dim, 1.0, dim+1);
+
 
     Vector<float> difference_per_cell (triangulation.n_active_cells());
     VectorTools::integrate_difference (dof_handler,
@@ -1542,6 +1553,18 @@ namespace Step59
 
     global_div_diff = difference_per_cell;
 
+    VectorTools::integrate_difference (dof_handler,
+                                       solution,
+                                       Solution<dim>(),
+                                       difference_per_cell,
+                                       QGauss<dim>(pressure_degree+3),
+                                       VectorTools::L2_norm,
+                                       &pressure_mask);
+    const double Pressure_L2_error = VectorTools::compute_global_error(triangulation,
+                                                            difference_per_cell,
+                                                                 VectorTools::L2_norm);
+
+
     std::vector<unsigned int> old_user_indices;
     triangulation.save_user_indices(old_user_indices);
     unsigned int i=0;
@@ -1588,6 +1611,7 @@ namespace Step59
 				<< " Hdiv_Conv_rate1: " << std::setw(6)<< (k==0? 0:last_Hdiv_error1/Velocity_Hdiv_error1) << std::endl
 //				<< " Hdiv error2:  " << std::setw(6) << Velocity_Hdiv_error2 << std::setw(0)
 //				<< " Hdiv_Conv_rate2: " << std::setw(6)<< (k==0? 0:last_Hdiv_error2/Velocity_Hdiv_error2) << std::endl
+        << " pressurel2: << "<< std::setw(12) << Pressure_L2_error << std::setw(0) << std::endl
 				<< "         *          " << std::endl;
 	last_l2_error = Velocity_L2_error;
 	last_H1_error = Velocity_H1_error;
@@ -1674,6 +1698,7 @@ namespace Step59
 	if (geo_type == GeoType::Cube)
 		GridGenerator::hyper_cube (triangulation, -1, 1);
 
+<<<<<<< HEAD
 	if (geo_type == GeoType::Circle)
 	{
 		GridGenerator::hyper_ball (triangulation);
@@ -1683,6 +1708,35 @@ namespace Step59
 	}
 	if (geo_type == GeoType::L_shape)
 		GridGenerator::hyper_L (triangulation);
+=======
+  if (geo_type == GeoType::Circle)
+    {
+      GridGenerator::hyper_ball (triangulation);
+      static const SphericalManifold<dim> boundary;
+      triangulation.set_all_manifold_ids_on_boundary (0);
+      triangulation.set_manifold (0, boundary);
+    }
+  if (geo_type == GeoType::L_shape)
+	  {
+      GridGenerator::hyper_L (triangulation);
+    }
+  if (geo_type == GeoType::L_shape_diagonal)
+    {
+      std::vector<unsigned int> repetitions(dim, 1);
+      repetitions[0] = 2;
+      Point<dim> p1 (-1.0, 0.0);
+      Point<dim> p2 (1.0, -1.0);
+      GridGenerator::subdivided_hyper_rectangle (triangulation,
+                                                 repetitions,
+                                                 p1,
+                                                 p2, false);
+      auto cell=triangulation.begin();
+      cell->vertex(0)(1)=1.0;
+      cell->vertex(2)(1)=1.0;
+      cell->vertex(2)(0)=0.0;
+      cell->vertex(1)(0)=-1.0;
+    }
+>>>>>>> 025d1e2e8bac22211b7f229325e38d3e135e5879
 
 	if (false)
 		GridTools::distort_random(0.2, triangulation);
@@ -1834,11 +1888,24 @@ int main ()
 
       const int degree = 2;
       const int dim = 2;
+      //FESystem<dim> fe(FESystem<dim>(FE_Q<dim>(degree), dim), 1, FE_Q<dim>(degree-1), 1);
+
+     // FESystem<dim> fe(FESystem<dim>(FE_DGQ<dim>(degree), dim), 1, FE_DGQ<dim>(degree-1), 1);
+
       FESystem<dim> fe(FE_RaviartThomas<dim>(degree), 1, FE_DGQ<dim>(degree), 1);
+
+      //      FESystem<dim> fe(FE_BDM<dim>(degree), 1, FE_DGP<dim>(degree), 1);
+
       StokesProblem<dim> flow_problem(fe,
+<<<<<<< HEAD
     		                          degree,
 									  SolverType::FGMRES_ILU,
 									  GeoType::Cube);
+=======
+                                      degree,
+                                      SolverType::FGMRES_ILU,
+                                      GeoType::Circle);
+>>>>>>> 025d1e2e8bac22211b7f229325e38d3e135e5879
 
       flow_problem.run ();
     }
