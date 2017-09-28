@@ -105,7 +105,7 @@ namespace Step59
 
   struct GeoType
   {
-	enum type {Cube, Cycle, L_sharp};
+	enum type {Cube, Circle, L_shape};
   };
 
 
@@ -483,7 +483,7 @@ namespace Step59
       			for (unsigned int d=0; d<v_components; ++d)
       			{
       				dinfo.matrix(0,false).matrix(i,j) +=
-      						   (2. * fe.shape_value_component(i,k,d) * penalty * fe.shape_value_component(j,k,d)
+      						   (fe.shape_value_component(i,k,d) * penalty * fe.shape_value_component(j,k,d)
       				           - (n * fe.shape_grad_component(i,k,d)) * fe.shape_value_component(j,k,d)
       				           - (n * fe.shape_grad_component(j,k,d)) * fe.shape_value_component(i,k,d))*fe.JxW(k);
 
@@ -498,7 +498,7 @@ namespace Step59
 
       		for (unsigned int d=0; d< v_components; ++d)
       		{
-      		    dinfo.vector(0).block(0)(i) += ( fe.shape_value_component(i,k,d) * penalty_bd * boundary_values[k][d]
+      		    dinfo.vector(0).block(0)(i) += ( fe.shape_value_component(i,k,d) * penalty * boundary_values[k][d]
 												 -(n * fe.shape_grad_component(i,k,d)) * boundary_values[k][d])
 												 * fe.JxW(k);
 
@@ -1423,7 +1423,7 @@ namespace Step59
   {
     // Here we must make sure to solve for the residual with "good enough" accuracy
     SolverControl solver_control (system_matrix.m(),
-                                  1e-12*system_rhs.l2_norm());
+                                  1e-14*system_rhs.l2_norm());
 
     // This is used to pass whether or not we want to solve for A inside
     // the preconditioner.  One could change this to false to see if
@@ -1672,16 +1672,16 @@ namespace Step59
   void StokesProblem<dim>::run ()
   {
 	if (geo_type == GeoType::Cube)
-		GridGenerator::hyper_cube (triangulation);
+		GridGenerator::hyper_cube (triangulation, -1, 1);
 
-	if (geo_type == GeoType::Cycle)
+	if (geo_type == GeoType::Circle)
 	{
 		GridGenerator::hyper_ball (triangulation);
 		static const SphericalManifold<dim> boundary;
 		triangulation.set_all_manifold_ids_on_boundary (0);
 		triangulation.set_manifold (0, boundary);
 	}
-	if (geo_type == GeoType::L_sharp)
+	if (geo_type == GeoType::L_shape)
 		GridGenerator::hyper_L (triangulation);
 
 	if (false)
@@ -1838,7 +1838,7 @@ int main ()
       StokesProblem<dim> flow_problem(fe,
     		                          degree,
 									  SolverType::FGMRES_ILU,
-									  GeoType::L_sharp);
+									  GeoType::Cube);
 
       flow_problem.run ();
     }
